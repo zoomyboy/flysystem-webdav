@@ -69,7 +69,7 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
         try {
             $properties = $this->client->propFind($location, ['{DAV:}resourcetype', '{DAV:}iscollection']);
 
-            return ! $this->propsIsDirectory($properties);
+            return !$this->propsIsDirectory($properties);
         } catch (Throwable $exception) {
             if ($exception instanceof ClientHttpException && $exception->getHttpStatus() === 404) {
                 return false;
@@ -186,7 +186,7 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
                 throw new RuntimeException('Unexpected status code received while deleting file: ' . $statusCode);
             }
         } catch (Throwable $exception) {
-            if ( ! ($exception instanceof ClientHttpException && $exception->getCode() === 404)) {
+            if (!($exception instanceof ClientHttpException && $exception->getCode() === 404)) {
                 throw UnableToDeleteFile::atLocation($path, $exception->getMessage(), $exception);
             }
         }
@@ -203,7 +203,7 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
                 throw new RuntimeException('Unexpected status code received while deleting file: ' . $statusCode);
             }
         } catch (Throwable $exception) {
-            if ( ! ($exception instanceof ClientHttpException && $exception->getCode() === 404)) {
+            if (!($exception instanceof ClientHttpException && $exception->getCode() === 404)) {
                 throw UnableToDeleteDirectory::atLocation($path, $exception->getMessage(), $exception);
             }
         }
@@ -216,19 +216,19 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
 
         foreach ($parts as $directory) {
             if ($directory === '.' || $directory === '') {
-                return;
+                continue;
             }
 
             $directoryParts[] = $directory;
             $directoryPath = implode('/', $directoryParts);
             $location = $this->encodePath($directoryPath) . '/';
 
-            if ($this->directoryExists($this->prefixer->stripDirectoryPrefix($directoryPath))) {
+            if ($this->directoryExists($this->prefixer->stripDirectoryPrefix('/' . $directoryPath))) {
                 continue;
             }
 
             try {
-                $response = $this->client->request('MKCOL', $location);
+                $response = $this->client->request('MKCOL', '/' . $location);
             } catch (Throwable $exception) {
                 throw UnableToCreateDirectory::dueToFailure($path, $exception);
             }
@@ -288,7 +288,7 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
             if ($this->propsIsDirectory($object)) {
                 yield new DirectoryAttributes($path, lastModified: $object['last_modified'] ?? null);
 
-                if ( ! $deep) {
+                if (!$deep) {
                     continue;
                 }
 
@@ -298,9 +298,9 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
             } else {
                 yield new FileAttributes(
                     $path,
-                    fileSize:     $object['file_size'] ?? null,
+                    fileSize: $object['file_size'] ?? null,
                     lastModified: $object['last_modified'] ?? null,
-                    mimeType:     $object['mime_type'] ?? null,
+                    mimeType: $object['mime_type'] ?? null,
                 );
             }
         }
@@ -433,7 +433,7 @@ class WebDAVAdapter implements FilesystemAdapter, PublicUrlGenerator
         try {
             $result = $this->client->propFind($location, [$property]);
 
-            if ( ! array_key_exists($property, $result)) {
+            if (!array_key_exists($property, $result)) {
                 throw new RuntimeException('Invalid response, missing key: ' . $property);
             }
 
